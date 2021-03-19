@@ -937,6 +937,7 @@ def clean(context, **kwargs):
         # consistent between the command and subcommands
         clean_obj = tmt.Clean(parent=clean_obj, context=context)
         clean_obj.guests()
+        clean_obj.runs()
         clean_obj.images()
 
 
@@ -968,6 +969,7 @@ def runs(context, path, last, id_, keep, **kwargs):
         raise tmt.utils.GeneralError("--keep must not be a negative number")
     if not os.path.exists(path):
         raise tmt.utils.GeneralError(f"Path {path} doesn't exist.")
+    tmt.Clean(parent=context.obj.clean, context=context).runs()
 
 
 @clean.command()

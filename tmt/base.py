@@ -11,6 +11,7 @@ import click
 import pprint
 import subprocess
 import functools
+import shutil
 
 import tmt.steps
 import tmt.utils
@@ -1366,6 +1367,40 @@ class Clean(tmt.utils.Common):
         for abs_path in tmt.utils.generate_runs(path, id_):
             run = Run(abs_path, self._context.obj.tree, self._context, False)
             self._stop_running_guests(run)
+
+    def _clean_workdir(self, path):
+        """ Remove a workdir (unless in dry mode) """
+        if self.opt('dry'):
+            self.verbose(f'Would remove workdir {path}', shift=1)
+        else:
+            self.verbose(f'Removing workdir {path}', shift=1)
+            try:
+                shutil.rmtree(path)
+            except OSError as error:
+                self.warn(f'Failed to remove {path}: {error}', shift=1)
+
+    def runs(self):
+        """ Clean workdirs of runs """
+        self.info('Run cleanup', color='blue')
+        path = self.opt('path')
+        id_ = self.opt('id')
+        if self.opt('last'):
+            # Pass the context containing --last to Run to choose
+            # the correct one.
+            last_run = Run(context=self._context, save_last=False)
+            self._clean_workdir(last_run.workdir)
+            return
+        all_workdirs = [path for path in tmt.utils.generate_runs(path, id_)]
+        keep = self.opt('keep')
+        if keep is not None:
+            # Sort by modify time of the workdirs and keep the newest workdirs
+            all_workdirs.sort(key=lambda workdir: os.path.getmtime(
+                os.path.join(workdir, 'run.yaml')), reverse=True)
+            all_workdirs = all_workdirs[keep:]
+            pass
+
+        for workdir in all_workdirs:
+            self._clean_workdir(workdir)
 
 
 class Result(object):
