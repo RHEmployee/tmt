@@ -1319,6 +1319,16 @@ class Status(tmt.utils.Common):
             self._context.obj = backup
 
 
+class Clean(tmt.utils.Common):
+    """ A class for cleaning up workdirs, guests or images """
+
+    def images(self):
+        """ Clean images of provision plugins """
+        self.info('Image cleanup', color='blue')
+        for method in tmt.steps.provision.ProvisionPlugin.methods():
+            method.class_.clean_images(self, self.opt('dry'))
+
+
 class Result(object):
     """
     Test result

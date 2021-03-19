@@ -17,6 +17,7 @@ import tmt.export
 import tmt.steps
 import tmt.templates
 import tmt.options
+import tmt.steps.provision
 
 # Explore available plugins (need to detect all supported methods first)
 tmt.plugins.explore()
@@ -926,8 +927,16 @@ def clean(context, **kwargs):
     Without any command, clean everything, stop the guests, remove
     all runs and then remove all images.
     """
+    echo(style('tmt cleanup', fg='red'))
+    clean_obj = tmt.Clean(parent=context.obj, context=context)
+    context.obj.clean = clean_obj
     if context.invoked_subcommand is None:
-        pass
+        # Set path to default
+        context.params['path'] = tmt.utils.WORKDIR_ROOT
+        # Create another level to the hierarchy so that logging indent is
+        # consistent between the command and subcommands
+        clean_obj = tmt.Clean(parent=clean_obj, context=context)
+        clean_obj.images()
 
 
 @clean.command()
@@ -1000,3 +1009,4 @@ def images(context, **kwargs):
     # FIXME: If there are more provision methods supporting this,
     #        we should add options to specify which provision should be
     #        cleaned, similarly to guests.
+    tmt.Clean(parent=context.obj.clean, context=context).images()
