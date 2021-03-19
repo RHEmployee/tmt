@@ -1267,14 +1267,8 @@ class Status(tmt.utils.Common):
 
     def process_run(self, run):
         """ Display the status of the given run based on verbosity """
-        try:
-            run.load()
-        except tmt.utils.GeneralError as error:
-            self.warn(f'Failed to check {run.workdir} ({error}).')
+        if not self.load_run(run):
             return
-        for plan in run.plans:
-            for step in plan.steps(disabled=True):
-                step.load()
         if self.opt('verbose') == 0:
             self.print_run_status(run)
         elif self.opt('verbose') == 1:
@@ -1299,17 +1293,9 @@ class Status(tmt.utils.Common):
         # Prepare absolute workdir path if --id was used
         id_ = self.opt('id')
         path = self.opt('path')
-        if id_ and '/' not in id_:
-            id_ = os.path.join(path, id_)
         self.print_header()
-        for filename in os.listdir(path):
-            abs_path = os.path.join(path, filename)
-            invalid_id = id_ and abs_path != id_
-            invalid_run = not os.path.exists(
-                os.path.join(abs_path, 'run.yaml'))
-            if not os.path.isdir(abs_path) or invalid_id or invalid_run:
-                continue
-            # Creating a and loading a run may override the data in the
+        for abs_path in tmt.utils.generate_runs(path, id_):
+            # Creating and loading a run may override the data in the
             # context which could affect the status of the following runs.
             # Backup the inner context object to later recover it to
             # its initial state.
@@ -1327,6 +1313,57 @@ class Clean(tmt.utils.Common):
         self.info('Image cleanup', color='blue')
         for method in tmt.steps.provision.ProvisionPlugin.methods():
             method.class_.clean_images(self, self.opt('dry'))
+
+    def _matches_how(self, plan):
+        """ Check if the given plan matches options """
+        how = plan.provision.data[0]['how']
+        virtual = self.opt('virtual')
+        container = self.opt('container')
+        if virtual and how == 'virtual':
+            return True
+        if container and how == 'container':
+            return True
+        # If virtual and container are not set, do not filter provision,
+        # return True, otherwise how didn't match and return False
+        return not any([virtual, container])
+
+    def _stop_running_guests(self, run):
+        """ Stop all running guests of a run """
+        if not self.load_run(run):
+            return
+        # Clean guests if provision is done but finish is not done
+        for plan in run.plans:
+            if plan.provision.status() == 'done':
+                if plan.finish.status() != 'done':
+                    # Wake up provision to load the active guests
+                    plan.provision.wake()
+                    if not self._matches_how(plan):
+                        continue
+                    if self.opt('dry'):
+                        self.verbose(f'Would stop guests in run {run.workdir} '
+                                     f'plan {plan.name}', shift=1)
+                    else:
+                        self.verbose(f'Stopping guests in run {run.workdir} '
+                                     f'plan {plan.name}', shift=1)
+                        # Set --quiet to avoid finish logging to terminal
+                        quiet = self._context.params['quiet']
+                        self._context.params['quiet'] = True
+                        plan.finish.go()
+                        self._context.params['quiet'] = quiet
+
+    def guests(self):
+        """ Clean guests of runs """
+        self.info('Guest cleanup', color='blue')
+        path = self.opt('path')
+        id_ = self.opt('id')
+        if self.opt('last'):
+            # Pass the context containing --last to Run to choose
+            # the correct one.
+            self._stop_running_guests(Run(context=self._context))
+            return
+        for abs_path in tmt.utils.generate_runs(path, id_):
+            run = Run(abs_path, self._context.obj.tree, self._context)
+            self._stop_running_guests(run)
 
 
 class Result(object):

@@ -936,6 +936,7 @@ def clean(context, **kwargs):
         # Create another level to the hierarchy so that logging indent is
         # consistent between the command and subcommands
         clean_obj = tmt.Clean(parent=clean_obj, context=context)
+        clean_obj.guests()
         clean_obj.images()
 
 
@@ -993,6 +994,7 @@ def guests(context, path, last, id_, **kwargs):
             "Options --last and --id cannot be used together.")
     if not os.path.exists(path):
         raise tmt.utils.GeneralError(f"Path {path} doesn't exist.")
+    tmt.Clean(parent=context.obj.clean, context=context).guests()
 
 
 @clean.command()

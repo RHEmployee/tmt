@@ -512,6 +512,17 @@ class Common(object):
             create_directory(self._workdir, 'workdir', quiet=True)
         return self._workdir
 
+    def load_run(self, run):
+        try:
+            run.load()
+        except GeneralError as error:
+            self.warn(f'Failed to check {run.workdir} ({error}).')
+            return False
+        for plan in run.plans:
+            for step in plan.steps(disabled=True):
+                step.load()
+        return True
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Exceptions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -997,6 +1008,22 @@ def default_branch(repository, remote='origin'):
     # The ref format is 'ref: refs/remotes/origin/main'
     with open(head) as ref:
         return ref.read().strip().split('/')[-1]
+
+
+def generate_runs(path, id_):
+    """ Generate absolute paths to runs from path """
+    # Prepare absolute workdir path if --id was used
+    if id_ and '/' not in id_:
+        id_ = os.path.join(path, id_)
+    for filename in os.listdir(path):
+        abs_path = os.path.join(path, filename)
+        invalid_id = id_ and abs_path != id_
+        invalid_run = not os.path.exists(
+            os.path.join(abs_path, 'run.yaml'))
+        if not os.path.isdir(abs_path) or invalid_id or invalid_run:
+            continue
+        yield abs_path
+
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
