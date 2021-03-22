@@ -1357,7 +1357,7 @@ class Clean(tmt.utils.Common):
         """ Clean guests of runs """
         self.info('Guest cleanup', color='blue')
         path = self.opt('path')
-        id_ = self.opt('id')
+        id_ = self.opt('id_')
         if self.opt('last'):
             # Pass the context containing --last to Run to choose
             # the correct one.
@@ -1383,7 +1383,7 @@ class Clean(tmt.utils.Common):
         """ Clean workdirs of runs """
         self.info('Run cleanup', color='blue')
         path = self.opt('path')
-        id_ = self.opt('id')
+        id_ = self.opt('id_')
         if self.opt('last'):
             # Pass the context containing --last to Run to choose
             # the correct one.

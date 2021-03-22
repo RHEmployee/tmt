@@ -1013,8 +1013,12 @@ def default_branch(repository, remote='origin'):
 def generate_runs(path, id_):
     """ Generate absolute paths to runs from path """
     # Prepare absolute workdir path if --id was used
-    if id_ and '/' not in id_:
-        id_ = os.path.join(path, id_)
+    if id_:
+        if '/' not in id_:
+            id_ = os.path.join(path, id_)
+        if os.path.isabs(id_):
+            yield id_
+            return
     for filename in os.listdir(path):
         abs_path = os.path.join(path, filename)
         invalid_id = id_ and abs_path != id_
