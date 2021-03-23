@@ -1017,7 +1017,8 @@ def generate_runs(path, id_):
         if '/' not in id_:
             id_ = os.path.join(path, id_)
         if os.path.isabs(id_):
-            yield id_
+            if os.path.exists(id_):
+                yield id_
             return
     for filename in os.listdir(path):
         abs_path = os.path.join(path, filename)
