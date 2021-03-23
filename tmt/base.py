@@ -1350,7 +1350,12 @@ class Clean(tmt.utils.Common):
                         # Set --quiet to avoid finish logging to terminal
                         quiet = self._context.params['quiet']
                         self._context.params['quiet'] = True
-                        plan.finish.go()
+                        try:
+                            plan.finish.go()
+                        except tmt.utils.GeneralError as error:
+                            self._context.params['quiet'] = quiet
+                            self.warn(f'Could not stop guest in run '
+                                      f'{run.workdir}: {error}', shift=1)
                         self._context.params['quiet'] = quiet
 
     def guests(self):
