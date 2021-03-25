@@ -925,7 +925,9 @@ def clean(context, **kwargs):
     Clean workdirs, guests or images.
 
     Without any command, clean everything, stop the guests, remove
-    all runs and then remove all images.
+    all runs and then remove all images. Search for runs in
+    /var/tmp/tmt, if runs are stored elsewhere, the path to them can
+    be set using a subcommand (either runs or guests subcommand).
     """
     echo(style('tmt cleanup', fg='red'))
     clean_obj = tmt.Clean(parent=context.obj, context=context)
@@ -937,10 +939,14 @@ def clean(context, **kwargs):
         # Create another level to the hierarchy so that logging indent is
         # consistent between the command and subcommands
         clean_obj = tmt.Clean(parent=clean_obj, context=context)
-        if not clean_obj.guests():
-            exit_code = 1
-        if not clean_obj.runs():
-            exit_code = 1
+        if os.path.exists(tmt.utils.WORKDIR_ROOT):
+            if not clean_obj.guests():
+                exit_code = 1
+            if not clean_obj.runs():
+                exit_code = 1
+        else:
+            echo(style(f'Directory {tmt.utils.WORKDIR_ROOT} does not exist, '
+                       f'skipping guest and run cleanup.', fg='yellow'))
         clean_obj.images()
         raise SystemExit(exit_code)
 

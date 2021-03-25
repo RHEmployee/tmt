@@ -1020,6 +1020,8 @@ def generate_runs(path, id_):
             if os.path.exists(id_):
                 yield id_
             return
+    if not os.path.exists(path):
+        return
     for filename in os.listdir(path):
         abs_path = os.path.join(path, filename)
         invalid_id = id_ and abs_path != id_

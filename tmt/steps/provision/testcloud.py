@@ -239,6 +239,9 @@ class ProvisionTestcloud(tmt.steps.provision.ProvisionPlugin):
     def clean_images(cls, clean, dry):
         """ Remove the testcloud images """
         clean.info('testcloud images', shift=1, color='green')
+        if not os.path.exists(TESTCLOUD_IMAGES):
+            clean.warn(f'Directory {TESTCLOUD_IMAGES} does not exist', shift=2)
+            return
         for image in os.listdir(TESTCLOUD_IMAGES):
             image = os.path.join(TESTCLOUD_IMAGES, image)
             if dry:
