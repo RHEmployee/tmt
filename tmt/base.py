@@ -938,7 +938,7 @@ class Tree(tmt.utils.Common):
 class Run(tmt.utils.Common):
     """ Test run, a container of plans """
 
-    def __init__(self, id_=None, tree=None, context=None):
+    def __init__(self, id_=None, tree=None, context=None, save_last=True):
         """ Initialize tree, workdir and plans """
         # Use the last run id if requested
         self.config = tmt.utils.Config()
@@ -952,7 +952,8 @@ class Run(tmt.utils.Common):
                 "Run id has to be specified in order to use --follow.")
         super().__init__(workdir=id_ or True, context=context)
         # Store workdir as the last run id
-        self.config.last_run(self.workdir)
+        if save_last:
+            self.config.last_run(self.workdir)
         self._save_tree(tree)
         self._plans = None
         self._environment = dict()
@@ -1300,7 +1301,7 @@ class Status(tmt.utils.Common):
             # Backup the inner context object to later recover it to
             # its initial state.
             backup = copy.deepcopy(self._context.obj)
-            run = Run(abs_path, self._context.obj.tree, self._context)
+            run = Run(abs_path, self._context.obj.tree, self._context, False)
             self.process_run(run)
             self._context.obj = backup
 
@@ -1359,10 +1360,11 @@ class Clean(tmt.utils.Common):
         if self.opt('last'):
             # Pass the context containing --last to Run to choose
             # the correct one.
-            self._stop_running_guests(Run(context=self._context))
+            self._stop_running_guests(Run(context=self._context,
+                                          save_last=False))
             return
         for abs_path in tmt.utils.generate_runs(path, id_):
-            run = Run(abs_path, self._context.obj.tree, self._context)
+            run = Run(abs_path, self._context.obj.tree, self._context, False)
             self._stop_running_guests(run)
 
 
