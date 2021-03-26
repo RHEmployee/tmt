@@ -31,7 +31,7 @@ __scripts__ = ['bin/tmt']
 
 # Prepare install requires and extra requires
 install_requires = [
-    'fmf>=0.13.0',
+    'fmf>=0.15.0',
     'click',
     'requests',
 ]
