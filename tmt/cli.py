@@ -930,15 +930,19 @@ def clean(context, **kwargs):
     echo(style('tmt cleanup', fg='red'))
     clean_obj = tmt.Clean(parent=context.obj, context=context)
     context.obj.clean = clean_obj
+    exit_code = 0
     if context.invoked_subcommand is None:
         # Set path to default
         context.params['path'] = tmt.utils.WORKDIR_ROOT
         # Create another level to the hierarchy so that logging indent is
         # consistent between the command and subcommands
         clean_obj = tmt.Clean(parent=clean_obj, context=context)
-        clean_obj.guests()
-        clean_obj.runs()
+        if not clean_obj.guests():
+            exit_code = 1
+        if not clean_obj.runs():
+            exit_code = 1
         clean_obj.images()
+        raise SystemExit(exit_code)
 
 
 @clean.command()
@@ -969,7 +973,10 @@ def runs(context, path, last, id_, keep, **kwargs):
         raise tmt.utils.GeneralError("--keep must not be a negative number")
     if not os.path.exists(path):
         raise tmt.utils.GeneralError(f"Path {path} doesn't exist.")
-    tmt.Clean(parent=context.obj.clean, context=context).runs()
+    exit_code = 0
+    if not tmt.Clean(parent=context.obj.clean, context=context).runs():
+        exit_code = 1
+    raise SystemExit(exit_code)
 
 
 @clean.command()
@@ -996,7 +1003,10 @@ def guests(context, path, last, id_, **kwargs):
             "Options --last and --id cannot be used together.")
     if not os.path.exists(path):
         raise tmt.utils.GeneralError(f"Path {path} doesn't exist.")
-    tmt.Clean(parent=context.obj.clean, context=context).guests()
+    exit_code = 0
+    if not tmt.Clean(parent=context.obj.clean, context=context).guests():
+        exit_code = 1
+    raise SystemExit(exit_code)
 
 
 @clean.command()

@@ -1332,8 +1332,9 @@ class Clean(tmt.utils.Common):
     def _stop_running_guests(self, run):
         """ Stop all running guests of a run """
         if not self.load_run(run):
-            return
+            return False
         # Clean guests if provision is done but finish is not done
+        successful = True
         for plan in run.plans:
             if plan.provision.status() == 'done':
                 if plan.finish.status() != 'done':
@@ -1356,7 +1357,9 @@ class Clean(tmt.utils.Common):
                             self._context.params['quiet'] = quiet
                             self.warn(f'Could not stop guest in run '
                                       f'{run.workdir}: {error}', shift=1)
+                            successful = False
                         self._context.params['quiet'] = quiet
+        return successful
 
     def guests(self):
         """ Clean guests of runs """
@@ -1366,12 +1369,14 @@ class Clean(tmt.utils.Common):
         if self.opt('last'):
             # Pass the context containing --last to Run to choose
             # the correct one.
-            self._stop_running_guests(Run(context=self._context,
-                                          save_last=False))
-            return
+            return self._stop_running_guests(Run(context=self._context,
+                                                 save_last=False))
+        without_error = True
         for abs_path in tmt.utils.generate_runs(path, id_):
             run = Run(abs_path, self._context.obj.tree, self._context, False)
-            self._stop_running_guests(run)
+            if not self._stop_running_guests(run):
+                without_error = False
+        return without_error
 
     def _clean_workdir(self, path):
         """ Remove a workdir (unless in dry mode) """
@@ -1383,6 +1388,8 @@ class Clean(tmt.utils.Common):
                 shutil.rmtree(path)
             except OSError as error:
                 self.warn(f'Failed to remove {path}: {error}', shift=1)
+                return False
+        return True
 
     def runs(self):
         """ Clean workdirs of runs """
@@ -1393,8 +1400,7 @@ class Clean(tmt.utils.Common):
             # Pass the context containing --last to Run to choose
             # the correct one.
             last_run = Run(context=self._context, save_last=False)
-            self._clean_workdir(last_run.workdir)
-            return
+            return self._clean_workdir(last_run.workdir)
         all_workdirs = [path for path in tmt.utils.generate_runs(path, id_)]
         keep = self.opt('keep')
         if keep is not None:
@@ -1404,8 +1410,12 @@ class Clean(tmt.utils.Common):
             all_workdirs = all_workdirs[keep:]
             pass
 
+        without_error = True
         for workdir in all_workdirs:
-            self._clean_workdir(workdir)
+            if not self._clean_workdir(workdir):
+                without_error = False
+
+        return without_error
 
 
 class Result(object):
