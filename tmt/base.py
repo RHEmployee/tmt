@@ -1000,6 +1000,38 @@ class Run(tmt.utils.Common):
             }
         self.write('run.yaml', tmt.utils.dict_to_yaml(data))
 
+    def load_from_workdir(self):
+        """
+        Load the run from its workdir, do not require the root in
+        run.yaml to exist. Doest not load the fmf tree.
+
+        Use only when the data in workdir is sufficient (e.g. tmt
+        clean and status only require the steps to be loaded and
+        their status).
+        """
+        try:
+            data = tmt.utils.yaml_to_dict(self.read('run.yaml'))
+        except tmt.utils.FileError:
+            self.debug('Run data not found.')
+            return
+        self._environment = data.get('environment')
+        self._context.obj.steps = set(data['steps'])
+        plans = []
+        # The root directory of the tree may not be available, create
+        # a partial Node object that only contains the necessary
+        # attributes required for plan/step loading.
+        for plan in data.get('plans'):
+            node = type('Node', (), {
+                'name': plan,
+                'data': {},
+                # No attributes will ever need to be accessed, just create
+                # a compatible method signature
+                'get': lambda section, item=None: item,
+            })
+            plans.append(Plan(node, run=self))
+
+        self._plans = plans
+
     def load(self):
         """ Load list of selected plans and enabled steps """
         try:
@@ -1297,14 +1329,8 @@ class Status(tmt.utils.Common):
         path = self.opt('path')
         self.print_header()
         for abs_path in tmt.utils.generate_runs(path, id_):
-            # Creating and loading a run may override the data in the
-            # context which could affect the status of the following runs.
-            # Backup the inner context object to later recover it to
-            # its initial state.
-            backup = copy.deepcopy(self._context.obj)
             run = Run(abs_path, self._context.obj.tree, self._context, False)
             self.process_run(run)
-            self._context.obj = backup
 
 
 class Clean(tmt.utils.Common):

@@ -514,7 +514,7 @@ class Common(object):
 
     def load_run(self, run):
         try:
-            run.load()
+            run.load_from_workdir()
         except GeneralError as error:
             self.warn(f'Failed to check {run.workdir} ({error}).')
             return False
