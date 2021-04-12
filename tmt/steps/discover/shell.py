@@ -1,9 +1,11 @@
 import os
-import fmf
 import tmt
 import copy
-import click
 import shutil
+
+import click
+import fmf
+
 import tmt.steps.discover
 
 class DiscoverShell(tmt.steps.discover.DiscoverPlugin):

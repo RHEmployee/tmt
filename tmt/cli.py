@@ -2,13 +2,13 @@
 
 """ Command line interface for the Test Management Tool """
 
+import os
+
+import click
+import fmf
 from click import echo, style
 from fmf.utils import listed
 
-import click
-import os
-
-import fmf
 import tmt
 import tmt.utils
 import tmt.plugins

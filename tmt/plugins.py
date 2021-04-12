@@ -2,12 +2,13 @@
 
 """ Handle Steps Plugins """
 
-import fmf
 import os
 import importlib
 import pkgutil
 import tmt
 import sys
+
+import fmf
 
 log = fmf.utils.Logging('tmt').logger
 

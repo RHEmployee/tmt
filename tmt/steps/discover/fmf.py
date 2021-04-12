@@ -1,9 +1,10 @@
 import os
-import click
 import shutil
 import re
 
+import click
 import fmf
+
 import tmt
 import tmt.beakerlib
 import tmt.steps.discover

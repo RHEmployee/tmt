@@ -5,28 +5,26 @@ import copy
 import os
 import re
 import time
+import subprocess
+import functools
+
 import fmf
 import yaml
 import click
-import pprint
-import subprocess
-import functools
+from fmf.utils import listed
+from click import echo, style
 
 import tmt.steps
 import tmt.utils
 import tmt.export
 import tmt.templates
-
 import tmt.steps.discover
 import tmt.steps.provision
 import tmt.steps.prepare
 import tmt.steps.execute
 import tmt.steps.report
 import tmt.steps.finish
-
 from tmt.utils import verdict
-from fmf.utils import listed
-from click import echo, style
 
 # Default test duration is 5m for individual tests discovered from L1
 # metadata and 1h for scripts defined directly in plans (L2 metadata).

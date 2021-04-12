@@ -2,8 +2,9 @@
 
 import re
 import tmt
-import pytest
 import unittest
+
+import pytest
 
 from tmt.utils import StructuredField, StructuredFieldError, public_git_url
 from tmt.utils import listify, duration_to_seconds

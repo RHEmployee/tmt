@@ -2,18 +2,19 @@
 
 """ Convert metadata into the new format """
 
-from io import open
-from click import echo, style
-from tmt.utils import ConvertError, StructuredFieldError
-
-import fmf.utils
-import tmt.utils
 import subprocess
 import pprint
 import copy
-import yaml
 import re
 import os
+from io import open
+
+import fmf.utils
+import yaml
+from click import echo, style
+
+import tmt.utils
+from tmt.utils import ConvertError
 
 log = fmf.utils.Logging('tmt').logger
 
