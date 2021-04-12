@@ -58,6 +58,7 @@ except AttributeError:
 #  Convert
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 def read_manual(plan_id, case_id, disabled, with_script):
     """
     Reads metadata of manual test cases from Nitrate
