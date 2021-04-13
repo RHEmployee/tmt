@@ -1,7 +1,7 @@
-import os
-import tmt
 import copy
+import os
 import shutil
+import tmt
 
 import click
 import fmf

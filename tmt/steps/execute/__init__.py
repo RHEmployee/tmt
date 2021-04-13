@@ -2,8 +2,8 @@ import os
 import re
 import time
 
-import fmf
 import click
+import fmf
 
 import tmt
 

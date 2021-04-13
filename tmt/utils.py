@@ -2,16 +2,16 @@
 """ Test Metadata Utilities """
 
 
-import unicodedata
-import subprocess
-import pprint
-import shlex
-import select
-import shutil
-import re
+import fcntl
 import io
 import os
-import fcntl
+import pprint
+import re
+import select
+import shlex
+import shutil
+import subprocess
+import unicodedata
 from collections import OrderedDict
 from threading import Timer
 

@@ -2,28 +2,28 @@
 """ Base Metadata Classes """
 
 import copy
+import functools
 import os
 import re
-import time
 import subprocess
-import functools
+import time
 
+import click
 import fmf
 import yaml
-import click
 from fmf.utils import listed
 from click import echo, style
 
-import tmt.steps
-import tmt.utils
 import tmt.export
-import tmt.templates
+import tmt.steps
 import tmt.steps.discover
 import tmt.steps.provision
 import tmt.steps.prepare
 import tmt.steps.execute
 import tmt.steps.report
 import tmt.steps.finish
+import tmt.templates
+import tmt.utils
 from tmt.utils import verdict
 
 # Default test duration is 5m for individual tests discovered from L1

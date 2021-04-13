@@ -6,8 +6,8 @@ import unittest
 
 import pytest
 
-from tmt.utils import StructuredField, StructuredFieldError, public_git_url
-from tmt.utils import listify, duration_to_seconds
+from tmt.utils import (StructuredField, StructuredFieldError, public_git_url,
+                       listify, duration_to_seconds)
 
 
 def test_public_git_url():

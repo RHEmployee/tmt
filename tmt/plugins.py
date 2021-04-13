@@ -2,11 +2,11 @@
 
 """ Handle Steps Plugins """
 
-import os
 import importlib
+import os
 import pkgutil
-import tmt
 import sys
+import tmt
 
 import fmf
 

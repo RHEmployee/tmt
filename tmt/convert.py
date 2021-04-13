@@ -2,11 +2,11 @@
 
 """ Convert metadata into the new format """
 
-import subprocess
-import pprint
 import copy
-import re
 import os
+import pprint
+import re
+import subprocess
 from io import open
 
 import fmf.utils
