@@ -56,6 +56,9 @@ class ProvisionConnect(tmt.steps.provision.ProvisionPlugin):
             click.option(
                 '-p', '--password', metavar='PASSWORD',
                 help='Password for login into the guest system.'),
+            click.option(
+                '-r', '--reboot', is_flag=True,
+                help='Reboot remote machine.'),
             ] + super().options(how)
 
     def default(self, option, default=None):
@@ -64,15 +67,18 @@ class ProvisionConnect(tmt.steps.provision.ProvisionPlugin):
         if option == 'user':
             return 'root'
         # No other defaults available
+        if option == 'reboot':
+            return False
+
         return default
 
     def show(self):
         """ Show provision details """
-        super().show(['guest', 'key', 'user', 'password', 'port'])
+        super().show(['guest', 'key', 'user', 'password', 'port', 'reboot'])
 
     def wake(self, data=None):
         """ Override options and wake up the guest """
-        super().wake(['guest', 'key', 'user', 'password', 'port'])
+        super().wake(['guest', 'key', 'user', 'password', 'port', 'reboot'])
         if data:
             self._guest = tmt.Guest(data, name=self.name, parent=self.step)
 
@@ -86,6 +92,7 @@ class ProvisionConnect(tmt.steps.provision.ProvisionPlugin):
         key = self.get('key')
         password = self.get('password')
         port = self.get('port')
+        reboot = self.get('reboot')
 
         # Check guest and auth info
         if not guest:
@@ -110,8 +117,19 @@ class ProvisionConnect(tmt.steps.provision.ProvisionPlugin):
             data['key'] = key
 
         # And finally create the guest
-        self._guest = tmt.Guest(data, name=self.name, parent=self.step)
+        self._guest = GuestConnect(data, name=self.name, parent=self.step)
+
+        if reboot:
+            self._guest.reboot()
 
     def guest(self):
         """ Return the provisioned guest """
         return self._guest
+
+
+class GuestConnect(tmt.Guest):
+    def reboot(self, hard=False):
+        if hard:
+            raise ProvisionErrorUnsupported("Method not supported")
+
+        self.execute("reboot")

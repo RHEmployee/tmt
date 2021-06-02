@@ -23,7 +23,7 @@ class ProvisionPodman(tmt.steps.provision.ProvisionPlugin):
     _guest = None
 
     # Supported keys
-    _keys = ['image', 'container', 'pull']
+    _keys = ['image', 'container', 'pull', 'reboot_soft', 'reboot_hard']
 
     # Supported methods
     _methods = [tmt.steps.Method(name='container', doc=__doc__, order=50)]
@@ -41,6 +41,12 @@ class ProvisionPodman(tmt.steps.provision.ProvisionPlugin):
             click.option(
                 '-p', '--pull', is_flag=True,
                 help='Force pulling a fresh container image.'),
+            click.option(
+                '--reboot-soft', is_flag=True,
+                help='Reboot container nicely.'),
+            click.option(
+                '--reboot-hard', is_flag=True,
+                help='Reboot container by stop and start.'),
             ] + super().options(how)
 
     def default(self, option, default=None):
@@ -48,6 +54,10 @@ class ProvisionPodman(tmt.steps.provision.ProvisionPlugin):
         # User 'fedora' as a default image
         if option == 'image':
             return 'fedora'
+        if option == 'reboot_hard':
+            return False
+        if option == 'reboot_soft':
+            return False
         # No other defaults available
         return default
 
@@ -76,6 +86,19 @@ class ProvisionPodman(tmt.steps.provision.ProvisionPlugin):
         data = dict()
         for key in self._keys:
             data[key] = self.get(key)
+
+        if self.get('reboot_soft') or self.get('reboot_hard'):
+            if self.get('reboot_soft') and self.get('reboot_hard'):
+                raise tmt.utils.ProvisionError(
+                    "--reboot-soft and --reboot-hard are mutual exclusive arguments.")
+            if not data['container']:
+                raise tmt.utils.ProvisionError("Container name not provided.")
+
+            hard = self.get('reboot_hard')
+            self._guest = GuestContainer(
+                data, name=self.name, parent=self.step)
+            self._guest.reboot(hard, data['container'])
+            raise SystemExit(0)
 
         # Create a new GuestTestcloud instance and start it
         self._guest = GuestContainer(data, name=self.name, parent=self.step)
@@ -150,6 +173,21 @@ class GuestContainer(tmt.Guest):
             ['run'] + workaround +
             ['--name', self.container, '-v', f'{workdir}:{workdir}:Z',
              '-itd', self.image])[0].strip()
+
+    def reboot(self, hard=False, container_name=None):
+        if not self.podman:
+            return
+
+        container_name_win = container_name
+        if self.container:
+            container_name_win = self.container
+
+        if hard:
+            self.podman(['container', 'stop', container_name_win])
+            self.podman(['container', 'start', container_name_win])
+            return
+
+        self.podman(['container', 'restart', container_name_win])
 
     def ansible(self, playbook):
         """ Prepare container using ansible playbook """

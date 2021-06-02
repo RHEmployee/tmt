@@ -484,6 +484,19 @@ class Guest(tmt.utils.Common):
         """
         self.debug(f"Doing nothing to stop guest '{self.guest}'.")
 
+    def reboot(self, hard=False):
+        """
+        Reboot the guest
+
+        Reboot machine.
+        hard options defines how reboot will proceed.
+        hard set to true means, that machine should be rebooted
+        by way which is not clean in sense that data can be loss.
+        hard option set to false means, that reboot should be
+        done gracefully.
+        """
+        self.debug(f"Doing nothing to reboot guest '{self.guest}'.")
+
     def remove(self):
         """
         Remove the guest
