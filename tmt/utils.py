@@ -1,6 +1,8 @@
 
 """ Test Metadata Utilities """
 
+import pysnooper
+
 import contextlib
 import datetime
 import glob
@@ -60,7 +62,7 @@ DEFAULT_SELECT_TIMEOUT = 5
 # Shell options to be set for all run shell scripts
 SHELL_OPTIONS = 'set -eo pipefail'
 
-
+#@pysnooper.snoop()
 class Config(object):
     """ User configuration """
 
@@ -73,6 +75,7 @@ class Config(object):
             except OSError as error:
                 raise GeneralError(
                     f"Failed to create config '{self.path}'.\n{error}")
+        self.get_user_config()
 
     def last_run(self, run_id=None):
         """ Get and set last run id """
@@ -91,6 +94,41 @@ class Config(object):
         if os.path.islink(symlink):
             return os.path.realpath(symlink)
         return None
+
+    def _get_defaults(self):
+        return { 
+                'user-colors' : {
+                    'info' : None,
+                    'fail' : 'red',
+                    'normal' : None,
+                    'warn' : 'yellow'
+            }
+        }
+
+    def get_color_for(self, type):
+        return self.user_config['user-colors'][type]
+
+    def get_user_config(self):
+        filepath = self.path + '/config.yml'
+
+        def merge_two_dicts(x, y):
+            """Given two dictionaries, merge them into a new dict as a shallow copy."""
+            z = x.copy()
+            z.update(y)
+            return z
+
+        self.user_config = self._get_defaults()
+        if not os.path.exists(filepath):
+            # set defaults
+            return
+        try:
+            with open(filepath  , 'r') as config:
+                user_config = yaml_to_dict(config)
+        except Exception as exception:
+            raise GeneralError(
+                f"Failed to load config from '{filepath}': {exception}")
+        finally:
+            self.user_config['user-config'] = merge_two_dicts(self.user_config['user-colors'], user_config['user-colors'])
 
 
 class StreamLogger(Thread):
@@ -153,12 +191,14 @@ class Common(object):
         self.name = name or self.__class__.__name__.lower()
         self.parent = parent
 
+
         # Store command line context
         if context:
             self._context = context
 
         # Initialize the workdir if requested
         self._workdir_load(workdir)
+        self.config = Config()
 
     def __str__(self):
         """ Name is the default string representation """
@@ -281,17 +321,20 @@ class Common(object):
 
     def info(self, key, value=None, color=None, shift=0, err=False):
         """ Show a message unless in quiet mode """
+        color = self.config.get_color_for('info')
         self._log(self._indent(key, value, color=None, shift=shift))
         if not self.opt('quiet'):
             echo(self._indent(key, value, color, shift), err=err)
 
     def warn(self, message, shift=0):
         """ Show a yellow warning message on info level, send to stderr """
+        color = self.config.get_color_for('warn')
         self.info('warn', message, color='yellow', shift=shift, err=True)
 
     def fail(self, message, shift=0):
         """ Show a red failure message on info level, send to stderr """
-        self.info('fail', message, color='red', shift=shift, err=True)
+        color = self.config.get_color_for('fail')
+        self.info('fail', message, color, shift=shift, err=True)
 
     def verbose(
             self, key, value=None, color=None, shift=0, level=1, err=False):
